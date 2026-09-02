@@ -1,0 +1,8 @@
+streamlit
+groq
+python-dotenv
+requests
+pandas
+altair
+vega_datasets
+pycountry

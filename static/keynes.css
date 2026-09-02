@@ -1,0 +1,810 @@
+:root {
+  --k-ink: var(--text-color, #1f2937);
+  --k-line: var(--border-color, #e6e6e2);
+  --k-card: var(--secondary-background-color, #fff);
+  --k-mute: color-mix(in oklab, var(--text-color, #1f2937) 52%, transparent);
+
+  --k-serif: 'Source Serif 4', Georgia, serif;
+  --k-sans: 'Archivo', system-ui, sans-serif;
+  --k-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+
+  --k-pos: #1f7a52;
+  --k-neg: #a83232;
+
+  --k-accent: #121a30;
+  --k-light: #fffff0;
+}
+
+
+/* ─────────────────────────────────────────────
+   LIENZO PRINCIPAL
+───────────────────────────────────────────── */
+
+.block-container {
+  width: 100%;
+  max-width: 780px;
+  box-sizing: border-box;
+  margin: 0 auto;
+
+  padding-top: 2.3rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 7rem;
+}
+
+
+/* ─────────────────────────────────────────────
+   TIPOGRAFÍA
+───────────────────────────────────────────── */
+
+[data-testid="stMarkdownContainer"] p {
+  font-family: var(--k-serif);
+  font-size: 15.5px;
+  line-height: 1.72;
+
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+
+/* títulos */
+
+h1,
+h2,
+h3 {
+  font-family: var(--k-serif);
+  letter-spacing: -0.35px;
+  color: var(--k-ink);
+}
+
+h1 {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 21px;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+
+/* enlaces */
+
+[data-testid="stMarkdownContainer"] a {
+  color: var(--k-ink);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+
+/* cifras y código */
+
+code,
+.k-mono,
+[data-testid="stMetricValue"] {
+  font-family: var(--k-mono);
+}
+
+
+/* ─────────────────────────────────────────────
+   EYEBROW / ETIQUETAS
+───────────────────────────────────────────── */
+
+.k-eyebrow {
+  font-family: var(--k-sans);
+
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+
+  text-transform: uppercase;
+
+  color: var(--k-mute);
+
+  margin-bottom: 6px;
+}
+
+
+/* ─────────────────────────────────────────────
+   CHAT
+───────────────────────────────────────────── */
+
+/*
+Cada mensaje deja de parecer una tarjeta.
+La conversación se siente como un documento.
+*/
+
+[data-testid="stChatMessage"] {
+  background: transparent;
+
+  border: none;
+  border-radius: 0;
+
+  padding: 0;
+  margin: 0;
+}
+
+
+/* quitar avatares */
+
+[data-testid="stChatMessageAvatarUser"],
+[data-testid="stChatMessageAvatarAssistant"] {
+  display: none;
+}
+
+
+/* eliminar espacio reservado por avatar */
+
+[data-testid="stChatMessage"] > div:first-child {
+  gap: 0;
+  width: 100%;
+}
+
+
+/* ── MENSAJE DEL USUARIO ─────────────────── */
+
+/*
+Cada nueva pregunta inicia visualmente
+un nuevo bloque de conversación.
+*/
+
+[data-testid="stChatMessage"]:has(
+  [data-testid="stChatMessageAvatarUser"]
+) {
+  border-top: 1px solid var(--k-line);
+
+  padding-top: 20px;
+  padding-bottom: 7px;
+
+  margin-top: 14px;
+}
+
+
+/* primera pregunta: evita línea innecesaria arriba */
+
+[data-testid="stChatMessage"]:first-of-type:has(
+  [data-testid="stChatMessageAvatarUser"]
+) {
+  border-top: none;
+  margin-top: 0;
+}
+
+
+/* alineación de pregunta */
+
+[data-testid="stChatMessage"]:has(
+  [data-testid="stChatMessageAvatarUser"]
+)
+[data-testid="stMarkdownContainer"] {
+  margin-left: auto;
+  width: fit-content;
+
+  max-width: 80%;
+
+  text-align: right;
+}
+
+
+/* estilo del texto */
+
+[data-testid="stChatMessage"]:has(
+  [data-testid="stChatMessageAvatarUser"]
+)
+p {
+  font-family: var(--k-sans);
+
+  font-size: 14.5px;
+  font-weight: 500;
+
+  line-height: 1.55;
+
+  max-width: none;
+
+  margin-bottom: 0;
+
+  color: var(--k-ink);
+}
+
+
+/* ── RESPUESTA DEL ASISTENTE ─────────────── */
+
+[data-testid="stChatMessage"]:has(
+  [data-testid="stChatMessageAvatarAssistant"]
+) {
+  padding-top: 7px;
+  padding-bottom: 19px;
+}
+
+
+/* respuesta editorial */
+
+[data-testid="stChatMessage"]:has(
+  [data-testid="stChatMessageAvatarAssistant"]
+)
+[data-testid="stMarkdownContainer"] {
+  width: 100%;
+}
+
+
+/* listas */
+
+[data-testid="stChatMessage"]:has(
+  [data-testid="stChatMessageAvatarAssistant"]
+)
+ul,
+
+[data-testid="stChatMessage"]:has(
+  [data-testid="stChatMessageAvatarAssistant"]
+)
+ol {
+  font-family: var(--k-serif);
+
+  font-size: 15.5px;
+  line-height: 1.7;
+
+  padding-left: 1.35rem;
+}
+
+
+/* bloques de código */
+
+[data-testid="stCodeBlock"] {
+  border: 1px solid var(--k-line);
+  border-radius: 5px;
+}
+
+
+/* ─────────────────────────────────────────────
+   INPUT DEL CHAT
+───────────────────────────────────────────── */
+
+/*
+Mantener alineación exacta con el lienzo.
+*/
+
+[data-testid="stBottomBlockContainer"] {
+  max-width: 780px;
+
+  margin: 0 auto;
+
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 0.8rem;
+}
+
+
+/* caja */
+
+[data-testid="stChatInput"] {
+  background-color: var(--k-accent);
+
+  border: 1px solid var(--k-accent);
+  border-radius: 8px;
+
+  box-shadow:
+    0 4px 18px rgba(18, 26, 48, 0.08);
+}
+
+
+/* capas internas */
+
+[data-testid="stChatInput"] > div,
+[data-testid="stChatInput"] div[data-baseweb="textarea"],
+[data-testid="stChatInput"] div[data-baseweb="base-input"] {
+  background-color: var(--k-accent) !important;
+
+  border-color: var(--k-accent) !important;
+  border-radius: 8px !important;
+}
+
+
+/* texto */
+
+[data-testid="stChatInput"] textarea {
+  background-color: transparent !important;
+
+  color: var(--k-light) !important;
+
+  font-family: var(--k-sans);
+
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+
+/* placeholder */
+
+[data-testid="stChatInput"] textarea::placeholder {
+  color: var(--k-light) !important;
+  opacity: 0.55;
+}
+
+
+/* botón de enviar */
+
+[data-testid="stChatInput"] button {
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+[data-testid="stChatInput"] button:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+[data-testid="stChatInput"] button,
+[data-testid="stChatInput"] button svg {
+  color: var(--k-light) !important;
+  fill: var(--k-light) !important;
+}
+
+
+/* ─────────────────────────────────────────────
+   TARJETAS
+───────────────────────────────────────────── */
+
+[data-testid="stVerticalBlockBorderWrapper"] {
+  background: transparent;
+
+  border: 1px solid var(--k-line);
+  border-radius: 5px;
+
+  box-shadow: none;
+
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+
+[data-testid="stVerticalBlockBorderWrapper"] > div {
+  padding: 0.25rem 1.25rem 0.4rem;
+}
+
+
+/* ─────────────────────────────────────────────
+   KPIs
+───────────────────────────────────────────── */
+
+[data-testid="stMetric"] {
+  background: transparent;
+
+  border: 1px solid var(--k-line);
+  border-radius: 5px;
+
+  padding: 14px 16px;
+
+  box-shadow: none;
+}
+
+
+/* label */
+
+[data-testid="stMetricLabel"] p {
+  font-family: var(--k-sans);
+
+  font-size: 9px !important;
+  font-weight: 600;
+  letter-spacing: 1.35px;
+
+  text-transform: uppercase;
+
+  color: var(--k-mute);
+
+  max-width: none;
+
+  margin-bottom: 3px;
+}
+
+
+/* valor */
+
+[data-testid="stMetricValue"] {
+  font-size: 25px;
+  font-weight: 400;
+
+  letter-spacing: -0.5px;
+}
+
+
+/* variación */
+
+[data-testid="stMetricDelta"] {
+  font-family: var(--k-mono);
+  font-size: 11.5px;
+}
+
+
+/* quitar icono */
+
+[data-testid="stMetricDelta"] svg {
+  display: none;
+}
+
+
+/* ─────────────────────────────────────────────
+   CHIPS / SUGERENCIAS
+───────────────────────────────────────────── */
+
+.k-chips {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  margin-top: 8px;
+}
+
+
+.k-chips button,
+.k-chip {
+  background: transparent;
+
+  border: 1px solid var(--k-line);
+  border-radius: 16px;
+
+  padding: 6px 11px;
+
+  font-family: var(--k-sans);
+
+  font-size: 12px;
+  font-weight: 400;
+
+  color: var(--k-ink);
+
+  cursor: pointer;
+
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+
+.k-chips button:hover,
+.k-chip:hover {
+  border-color: var(--k-accent);
+
+  background:
+    color-mix(
+      in oklab,
+      var(--k-accent) 4%,
+      transparent
+    );
+}
+
+
+/* botones Streamlit usados como chips */
+
+.st-key-chips
+[data-testid="stBaseButton-secondary"] {
+  min-height: 0;
+
+  border-radius: 16px;
+
+  padding: 6px 11px;
+
+  font-size: 12px;
+  font-weight: 400;
+
+  line-height: 1.3;
+}
+
+
+/* ─────────────────────────────────────────────
+   TABLAS
+───────────────────────────────────────────── */
+
+[data-testid="stDataFrame"] {
+  border-radius: 5px;
+}
+
+
+[data-testid="stTable"] table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+
+/* encabezados */
+
+[data-testid="stTable"] th {
+  font-family: var(--k-sans);
+
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.3px;
+
+  text-transform: uppercase;
+
+  color: var(--k-mute);
+
+  border: none;
+  border-bottom: 1px solid var(--k-line);
+
+  text-align: right;
+
+  padding: 8px 10px;
+}
+
+
+[data-testid="stTable"] th:first-child {
+  text-align: left;
+}
+
+
+/* celdas */
+
+[data-testid="stTable"] td {
+  font-family: var(--k-mono);
+
+  font-size: 13px;
+
+  text-align: right;
+
+  border: none;
+  border-top: 1px solid var(--k-line);
+
+  padding: 9px 10px;
+}
+
+
+[data-testid="stTable"] td:first-child {
+  font-family: var(--k-serif);
+
+  font-size: 14.5px;
+
+  text-align: left;
+}
+
+
+/* semántica */
+
+.k-pos {
+  color: var(--k-pos);
+}
+
+.k-neg {
+  color: var(--k-neg);
+}
+
+
+/* ─────────────────────────────────────────────
+   FUENTES / CITAS
+───────────────────────────────────────────── */
+
+.k-source {
+  border-top: 1px solid var(--k-line);
+
+  padding-top: 10px;
+  margin-top: 14px;
+
+  font-family: var(--k-sans);
+
+  font-size: 11.5px;
+  line-height: 1.55;
+
+  color: var(--k-mute);
+}
+
+
+.k-source .k-code {
+  font-family: var(--k-mono);
+  font-size: 10.5px;
+}
+
+
+/* ─────────────────────────────────────────────
+   SIDEBAR
+───────────────────────────────────────────── */
+.st-key-sidebar_logo {
+  margin-top: 0 !important;
+  margin-bottom: -2.5rem !important;
+}
+
+.st-key-sidebar_logo [data-testid="stImage"] {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* título */
+
+[data-testid="stSidebar"] h1 {
+  font-family: var(--k-serif);
+
+  font-size: 17px;
+  font-weight: 600;
+
+  letter-spacing: -0.2px;
+}
+
+
+/* texto */
+
+[data-testid="stSidebar"]
+[data-testid="stMarkdownContainer"] p,
+
+[data-testid="stSidebar"]
+[data-testid="stMarkdownContainer"] li {
+  font-family: var(--k-sans);
+
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+
+/* botones sidebar */
+
+[data-testid="stSidebar"]
+[data-testid="stBaseButton-secondary"] {
+  justify-content: flex-start;
+
+  min-height: 0;
+
+  border: none;
+  border-radius: 4px;
+
+  background: transparent;
+
+  padding: 7px 9px;
+
+  font-family: var(--k-sans);
+
+  font-size: 12.5px;
+  font-weight: 400;
+
+  color: var(--k-ink);
+}
+
+
+[data-testid="stSidebar"]
+[data-testid="stBaseButton-secondary"]:hover {
+  background:
+    color-mix(
+      in oklab,
+      var(--k-ink) 5%,
+      transparent
+    );
+}
+
+
+/* divisores */
+
+[data-testid="stSidebar"] hr {
+  margin: 15px 0;
+
+  border-color: var(--k-line);
+}
+
+
+/* caption */
+
+[data-testid="stSidebar"]
+[data-testid="stCaptionContainer"] {
+  opacity: 0.65;
+}
+
+
+/* ─────────────────────────────────────────────
+   BOTONES GENERALES
+───────────────────────────────────────────── */
+
+[data-testid="stBaseButton-primary"] {
+  border-radius: 5px;
+
+  font-family: var(--k-sans);
+
+  font-weight: 500;
+}
+
+
+[data-testid="stBaseButton-secondary"] {
+  border-radius: 5px;
+
+  font-family: var(--k-sans);
+
+  font-weight: 400;
+}
+
+
+/* download button */
+
+[data-testid="stDownloadButton"] button {
+  min-height: 0;
+
+  padding: 6px 10px;
+
+  border-radius: 4px;
+
+  font-family: var(--k-sans);
+
+  font-size: 11.5px;
+}
+
+
+/* ─────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────── */
+
+[data-baseweb="tab-list"] {
+  gap: 0;
+
+  border-bottom: 1px solid var(--k-line);
+}
+
+
+[data-baseweb="tab"] {
+  padding: 7px 11px;
+
+  font-family: var(--k-sans);
+
+  font-size: 11.5px;
+
+  color: var(--k-mute);
+}
+
+
+/* ─────────────────────────────────────────────
+   SPINNER / STATUS
+───────────────────────────────────────────── */
+
+[data-testid="stSpinner"] {
+  font-family: var(--k-sans);
+
+  font-size: 12px;
+
+  color: var(--k-mute);
+}
+
+
+/* ─────────────────────────────────────────────
+   CROMO STREAMLIT
+───────────────────────────────────────────── */
+
+#MainMenu,
+footer,
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"] {
+  display: none;
+}
+
+
+/* ─────────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  .block-container {
+    padding-top: 1.6rem;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  [data-testid="stBottomBlockContainer"] {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  [data-testid="stChatMessage"]:has(
+    [data-testid="stChatMessageAvatarUser"]
+  )
+  [data-testid="stMarkdownContainer"] {
+    max-width: 90%;
+  }
+
+  [data-testid="stMarkdownContainer"] p {
+    font-size: 15px;
+  }
+
+}
+
+[data-testid="stMetricLabel"] { min-height: 42px; }
+[data-testid="stColumn"] { padding-left: 0; padding-right: 0; }
+
+[data-testid="stVegaLiteChart"] .vega-embed summary,
+[data-testid="stElementToolbar"] { display: none; }
