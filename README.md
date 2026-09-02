@@ -51,7 +51,7 @@ La geometría de los mapas viene de
 ## Instalación
 
 ```bash
-git clone https://github.com/<usuario>/keynes-agent.git
+git clone https://github.com/cl1199/keynes-agent.git
 cd keynes-agent
 
 python3 -m venv env

@@ -808,3 +808,10 @@ footer,
 
 [data-testid="stVegaLiteChart"] .vega-embed summary,
 [data-testid="stElementToolbar"] { display: none; }
+
+.vega-embed .vega-actions,
+.vega-embed summary { display: none !important; }
+
+[data-testid="stChatInput"] textarea {
+  caret-color: var(--k-light) !important;
+}

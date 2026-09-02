@@ -286,11 +286,18 @@ with st.sidebar:
 
     eyebrow("Ejemplos")
 
-    st.markdown(
-        "- ¿Cuánto son las remesas en Guatemala?\n"
-        "- PIB per cápita de Guatemala en quetzales\n"
-        "- Gráfica la inflación de los últimos 15 años"
-    )
+    EJEMPLOS = [
+        "Dame el panorama económico de Guatemala",
+        "PIB per cápita de Guatemala en quetzales",
+        "Compara la inflación de Guatemala, México y Costa Rica",
+        "Muéstrame el PIB per cápita de Centroamérica en un mapa",
+        "¿De qué vive la economía de Guatemala?",
+    ]
+
+    with st.container(key="chips"):
+        for i, ej in enumerate(EJEMPLOS):
+            if st.button(ej, key=f"ej_{i}", use_container_width=True):
+                st.session_state.pregunta_pendiente = ej
 
     st.divider()
 
@@ -319,7 +326,8 @@ for msg in st.session_state.historial:
 
 # --- Entrada nueva ---
 pregunta = st.chat_input("Pregunta algo...")
-
+if st.session_state.get("pregunta_pendiente"):
+    pregunta = st.session_state.pop("pregunta_pendiente")
 
 if pregunta:
     # Guardar mensaje del usuario
