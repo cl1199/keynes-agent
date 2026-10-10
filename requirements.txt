@@ -6,3 +6,4 @@ pandas
 altair
 vega_datasets
 pycountry
+supabase

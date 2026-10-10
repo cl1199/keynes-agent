@@ -2,6 +2,7 @@ import requests
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import time
+import db
 
 
 class KeynesTools:
@@ -153,6 +154,12 @@ class KeynesTools:
         if llave in self._cache:
             return self._cache[llave]
 
+        # Nivel 2: Supabase
+        guardado = db.leer_cache(llave)
+        if guardado is not None:
+            self._cache[llave] = guardado      # sube a memoria
+            return guardado
+
         url = f"https://api.worldbank.org/v2/country/{pais}/indicator/{codigo}"
         try:
             r = requests.get(url,
@@ -188,6 +195,7 @@ class KeynesTools:
             "fuente": "Banco Mundial",
         }
         self._cache[llave] = resultado
+        db.guardar_cache(llave, resultado)
         return resultado
 
 ### Herramienta 2: Conversión entre monedas (por defecto 1 USD a GTQ)
@@ -517,5 +525,13 @@ class KeynesTools:
         }
     # Prueba rapida de las herramientas sin pasar por el agente
 if __name__ == "__main__":
-    herramientas = KeynesTools()
-    print(herramientas.mapa_indicador(["GTM","SLV","HND","NIC","CRI","PAN","BLZ"], "pib_per_capita"))
+    t = KeynesTools()
+    import time
+    t0 = time.time(); t.consultar_indicador_banco_mundial("GTM", "pib", 5)
+    print(f"1a (API):      {time.time()-t0:.2f}s")
+    t0 = time.time(); t.consultar_indicador_banco_mundial("GTM", "pib", 5)
+    print(f"2a (memoria):  {time.time()-t0:.2f}s")
+
+    t2 = KeynesTools()          # instancia nueva, memoria vacía
+    t0 = time.time(); t2.consultar_indicador_banco_mundial("GTM", "pib", 5)
+    print(f"3a (Supabase): {time.time()-t0:.2f}s")

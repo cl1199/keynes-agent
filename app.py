@@ -11,6 +11,8 @@ import altair as alt
 import pandas as pd
 import pycountry
 import streamlit as st
+import uuid
+import db
 from dotenv import load_dotenv
 from groq import Groq
 from vega_datasets import data
@@ -25,6 +27,7 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="expanded",
 )
+
 
 # --- Hoja de estilo ---
 # La ruta se ancla al archivo, no al directorio de ejecucion.
@@ -301,6 +304,32 @@ with st.sidebar:
 
     st.divider()
 
+    if db.disponible():
+        st.divider()
+        eyebrow("Conversaciones")
+
+        sesiones = db.listar_sesiones(10)
+        if not sesiones:
+            st.caption("Aún no hay conversaciones guardadas.")
+        else:
+            for s in sesiones:
+                etiqueta = f"{s['fecha']} · {s['titulo']}"
+                if st.button(etiqueta, key=f"ses_{s['sesion']}",
+                             use_container_width=True):
+                    st.session_state.historial = db.cargar_sesion(s["sesion"])
+                    st.session_state.sesion = s["sesion"]
+                    # El modelo debe recordar la conversacion cargada
+                    st.session_state.memory = BasicMemory(max_messages=10)
+                    for m in st.session_state.historial:
+                        st.session_state.memory.add(m["rol"], m["texto"])
+                    st.rerun()
+
+        if st.button("Nueva conversación", use_container_width=True):
+            st.session_state.historial = []
+            st.session_state.sesion = str(uuid.uuid4())
+            st.session_state.memory = BasicMemory(max_messages=10)
+            st.rerun()
+
     st.caption(
         "Creado por [Carlos Lahoud](https://www.linkedin.com/in/carlos-lahoud/) y Streamlit."
     )
@@ -315,6 +344,8 @@ if "memory" not in st.session_state:
     st.session_state.memory = BasicMemory(max_messages=10)
 if "historial" not in st.session_state:
     st.session_state.historial = []
+if "sesion" not in st.session_state:
+    st.session_state.sesion = str(uuid.uuid4())
 
 # --- Repintar la conversación previa ---
 for msg in st.session_state.historial:
@@ -335,6 +366,7 @@ if pregunta:
         "rol": "user",
         "texto": pregunta
     })
+    db.guardar_mensaje(st.session_state.sesion, "user", pregunta)
 
     # Mostrar mensaje del usuario
     with st.chat_message("user"):
@@ -360,6 +392,8 @@ if pregunta:
         "texto": respuesta,
         "graficos": visuales
     })
+    db.guardar_mensaje(st.session_state.sesion, "assistant", respuesta, visuales)
 
     st.session_state.memory.add("user", pregunta)
     st.session_state.memory.add("assistant", respuesta)
+
