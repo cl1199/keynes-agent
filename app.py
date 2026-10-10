@@ -312,11 +312,10 @@ with st.sidebar:
             st.caption("Aún no hay conversaciones guardadas.")
         else:
             for s in sesiones:
-                etiqueta = f"{s['fecha']} · {s['titulo']}"
                 col_abrir, col_borrar = st.columns([5, 1])
 
                 with col_abrir:
-                    if st.button(etiqueta, key=f"ses_{s['sesion']}",
+                    if st.button(s["titulo"], key=f"ses_{s['sesion']}",
                                  use_container_width=True):
                         st.session_state.historial = db.cargar_sesion(s["sesion"])
                         st.session_state.sesion = s["sesion"]
