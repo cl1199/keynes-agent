@@ -48,50 +48,44 @@ def guardar_cache(llave: str, payload: dict) -> None:
          .execute())
     except Exception:
         pass
-def guardar_mensaje(sesion: str, rol: str, texto: str, visuales=None) -> None:
-    """Guarda un turno de la conversacion."""
-    if cliente is None:
-        return
-    try:
-        (cliente.table("conversaciones")
-         .insert({
-             "sesion": sesion,
-             "rol": rol,
-             "texto": texto,
-             "visuales": visuales or [],
-         })
-         .execute())
-    except Exception:
-        pass
 
 
 def listar_sesiones(limite: int = 20) -> list:
-    """Devuelve las conversaciones recientes: id de sesion, primera pregunta y fecha."""
+    """Devuelve las conversaciones recientes: id de sesion, titulo y fecha."""
     if cliente is None:
         return []
     try:
         r = (cliente.table("conversaciones")
-             .select("sesion, texto, creado_en")
-             .eq("rol", "user")
+             .select("sesion, rol, texto, titulo, creado_en")
              .order("creado_en", desc=True)
-             .limit(limite * 6)
+             .limit(limite * 12)
              .execute())
     except Exception:
         return []
 
-    vistas, sesiones = set(), []
+    # Las filas vienen de la mas reciente a la mas antigua
+    sesiones = {}
     for fila in r.data:
-        if fila["sesion"] in vistas:
-            continue
-        vistas.add(fila["sesion"])
-        sesiones.append({
+        s = sesiones.setdefault(fila["sesion"], {
             "sesion": fila["sesion"],
-            "titulo": fila["texto"][:60],
+            "titulo": None,
+            "pregunta": None,
             "fecha": fila["creado_en"][:10],
         })
-        if len(sesiones) >= limite:
-            break
-    return sesiones
+        if fila.get("titulo"):
+            s["titulo"] = fila["titulo"]
+        if fila["rol"] == "user":
+            s["pregunta"] = fila["texto"][:60]  # termina siendo la primera
+
+    # Las conversaciones viejas no tienen titulo: se usa su primera pregunta
+    resultado = []
+    for s in list(sesiones.values())[:limite]:
+        resultado.append({
+            "sesion": s["sesion"],
+            "titulo": s["titulo"] or s["pregunta"] or "Conversación",
+            "fecha": s["fecha"],
+        })
+    return resultado
 
 
 def cargar_sesion(sesion: str) -> list:
@@ -116,5 +110,19 @@ def borrar_sesion(sesion: str) -> None:
         return
     try:
         cliente.table("conversaciones").delete().eq("sesion", sesion).execute()
+    except Exception:
+        pass
+
+def guardar_mensaje(sesion: str, rol: str, texto: str, visuales=None,
+                    titulo: str = None) -> None:
+    """Guarda un turno de la conversacion (con titulo si es el primero)."""
+    if cliente is None:
+        return
+    try:
+        fila = {"sesion": sesion, "rol": rol, "texto": texto,
+                "visuales": visuales or []}
+        if titulo:
+            fila["titulo"] = titulo
+        cliente.table("conversaciones").insert(fila).execute()
     except Exception:
         pass

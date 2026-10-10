@@ -16,7 +16,7 @@ import db
 from dotenv import load_dotenv
 from groq import Groq
 from vega_datasets import data
-from Keynes_agent import process_response
+from Keynes_agent import process_response, generar_titulo
 from basic_memory import BasicMemory
 
 load_dotenv()
@@ -403,7 +403,14 @@ if pregunta:
         "texto": respuesta,
         "graficos": visuales
     })
-    db.guardar_mensaje(st.session_state.sesion, "assistant", respuesta, visuales)
+    es_primer_turno = len(st.session_state.historial) == 2
+
+    titulo = None
+    if es_primer_turno:
+        titulo = generar_titulo(st.session_state.client, pregunta, respuesta)
+
+    db.guardar_mensaje(st.session_state.sesion, "assistant", respuesta,
+                       visuales, titulo)
 
     st.session_state.memory.add("user", pregunta)
     st.session_state.memory.add("assistant", respuesta)

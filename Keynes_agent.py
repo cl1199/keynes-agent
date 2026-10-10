@@ -348,7 +348,28 @@ def process_response(client, memory_messages, user_text):
             })
         # sin return: el while vuelve a llamar al modelo
 
-
+def generar_titulo(client, pregunta: str, respuesta: str) -> str:
+    """Resume el tema de la conversacion en pocas palabras."""
+    try:
+        r = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[
+                {"role": "system",
+                 "content": "Genera un titulo de 3 a 6 palabras que resuma el tema "
+                            "de la consulta. Sin comillas, sin punto final, en "
+                            "español. Responde solo con el titulo."},
+                {"role": "user",
+                 "content": f"Pregunta: {pregunta}\n\nRespuesta: {respuesta[:400]}"},
+            ],
+            # gpt-oss razona antes de responder: hay que dejarle margen
+            max_tokens=300,
+            reasoning_effort="low",
+        )
+        titulo = (r.choices[0].message.content or "").strip()[:60]
+        return titulo or pregunta[:60]
+    except Exception:
+        return pregunta[:60]
+    
 if __name__ == "__main__":
     print("Agente Economico Keynes")
     print("Escribe 'salir' para terminar.\n")
