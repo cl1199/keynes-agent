@@ -305,7 +305,6 @@ with st.sidebar:
     st.divider()
 
     if db.disponible():
-        st.divider()
         eyebrow("Conversaciones")
 
         sesiones = db.listar_sesiones(10)
@@ -314,15 +313,28 @@ with st.sidebar:
         else:
             for s in sesiones:
                 etiqueta = f"{s['fecha']} · {s['titulo']}"
-                if st.button(etiqueta, key=f"ses_{s['sesion']}",
-                             use_container_width=True):
-                    st.session_state.historial = db.cargar_sesion(s["sesion"])
-                    st.session_state.sesion = s["sesion"]
-                    # El modelo debe recordar la conversacion cargada
-                    st.session_state.memory = BasicMemory(max_messages=10)
-                    for m in st.session_state.historial:
-                        st.session_state.memory.add(m["rol"], m["texto"])
-                    st.rerun()
+                col_abrir, col_borrar = st.columns([5, 1])
+
+                with col_abrir:
+                    if st.button(etiqueta, key=f"ses_{s['sesion']}",
+                                 use_container_width=True):
+                        st.session_state.historial = db.cargar_sesion(s["sesion"])
+                        st.session_state.sesion = s["sesion"]
+                        # El modelo debe recordar la conversacion cargada
+                        st.session_state.memory = BasicMemory(max_messages=10)
+                        for m in st.session_state.historial:
+                            st.session_state.memory.add(m["rol"], m["texto"])
+                        st.rerun()
+
+                with col_borrar:
+                    if st.button("✕", key=f"del_{s['sesion']}",
+                                 help="Eliminar"):
+                        db.borrar_sesion(s["sesion"])
+                        if st.session_state.get("sesion") == s["sesion"]:
+                            st.session_state.historial = []
+                            st.session_state.sesion = str(uuid.uuid4())
+                            st.session_state.memory = BasicMemory(max_messages=10)
+                        st.rerun()
 
         if st.button("Nueva conversación", use_container_width=True):
             st.session_state.historial = []

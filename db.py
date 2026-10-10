@@ -108,3 +108,13 @@ def cargar_sesion(sesion: str) -> list:
                  "graficos": m.get("visuales") or []} for m in r.data]
     except Exception:
         return []
+
+
+def borrar_sesion(sesion: str) -> None:
+    """Elimina todos los mensajes de una conversacion."""
+    if cliente is None:
+        return
+    try:
+        cliente.table("conversaciones").delete().eq("sesion", sesion).execute()
+    except Exception:
+        pass
