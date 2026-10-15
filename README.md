@@ -22,6 +22,7 @@ Ejemplos de consultas:
 - Compara la inflación de Guatemala, México y Costa Rica en los últimos 5 años
 - Dame el panorama económico de Guatemala
 - Muéstrame el PIB per cápita de Centroamérica en un mapa
+- ¿Cuánto crecerá Guatemala en los próximos años según el FMI?
 
 ## Herramientas
 
@@ -35,15 +36,19 @@ Ejemplos de consultas:
 | `ficha_pais` | Perfil macroeconómico completo con contorno geográfico | Banco Mundial |
 | `sectores_pib` | Composición del PIB por sector económico | Banco Mundial |
 | `mapa_indicador` | Mapa coroplético de un indicador para varios países | Banco Mundial |
+| `proyecciones_fmi` | Historia reciente y proyecciones a 5 años de 11 indicadores | FMI · World Economic Outlook |
 
 ## Fuentes de datos
 
-Ambas APIs son públicas y no requieren autenticación:
+Las tres APIs son públicas y no requieren autenticación:
 
 - **[Banco Mundial — Indicators API](https://datahelpdesk.worldbank.org/knowledgebase/articles/889392)**
   — 30 indicadores curados: actividad económica, precios, empleo, sector externo,
   remesas, finanzas públicas, sector financiero, desarrollo y estructura económica.
 - **[open.er-api.com](https://open.er-api.com)** — tipo de cambio diario, incluye GTQ.
+- **[FMI — DataMapper API](https://www.imf.org/external/datamapper/api/help)**
+  — proyecciones del World Economic Outlook: crecimiento, inflación, deuda,
+  balance fiscal, cuenta corriente, PIB y población.
 
 La geometría de los mapas viene de
 [world-atlas](https://github.com/topojson/world-atlas) vía `vega_datasets`.
@@ -114,7 +119,8 @@ visualización no requiere tocar la lógica de datos.
 
 El agente mantiene una ventana de memoria de los últimos 10 mensajes y cachea
 las respuestas del Banco Mundial en memoria durante la sesión. El tipo de cambio
-no se cachea, porque un valor viejo sería incorrecto.
+no se cachea, porque un valor viejo sería incorrecto. Las proyecciones del FMI
+se cachean solo en memoria: el FMI publica una edición nueva cada abril y octubre.
 
 ## Limitaciones
 
@@ -124,6 +130,10 @@ no se cachea, porque un valor viejo sería incorrecto.
 - **Cada indicador tiene su propio rezago.** El PIB llega a 2025, las remesas a
   2024, el índice de Gini a 2023. El agente reporta el año de cada cifra, pero
   no son directamente comparables entre sí.
+- **Las proyecciones son del FMI, no del agente.** Se revisan en cada edición
+  del WEO, y el año en curso ya cuenta como proyección aunque haya datos
+  parciales. El FMI no publica todos los indicadores para todos los países
+  (por ejemplo, no hay desempleo para Guatemala).
 - **No usa fuentes nacionales.** El Banco Mundial reproduce datos que producen
   los institutos nacionales; para el dato oficial guatemalteco habría que
   consultar directamente al INE, MINFIN o Banguat.

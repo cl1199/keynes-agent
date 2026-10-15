@@ -43,6 +43,13 @@ REGLAS:
    rompe el formato de la interfaz.
 8. Cuando uses comparar_paises, apoyate en los campos "analisis" y
    "resumen" para comentar. No calcules diferencias por tu cuenta.
+9. Usa indicador_bm para datos historicos y proyecciones_fmi cuando el
+   usuario pregunte por el futuro (proyecciones, pronosticos, "cuanto
+   crecera", años posteriores al actual). Deja claro que son proyecciones,
+   no datos observados, y cita la edicion del World Economic Outlook que
+   viene en el campo "fuente". Comenta con el campo "analisis". El
+   grafico se muestra automaticamente: no repitas la serie en una tabla,
+   resume en dos o tres lineas.
 """
 
 TOOLS = [
@@ -258,6 +265,44 @@ TOOLS = [
                 "required": ["paises", "indicador"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "proyecciones_fmi",
+            "description": (
+                "Devuelve la historia reciente y las proyecciones del FMI "
+                "(World Economic Outlook) para un indicador de un pais, y las "
+                "muestra en un grafico. Usar cuando el usuario pregunte por "
+                "proyecciones, pronosticos o valores de años futuros. "
+                "Indicadores: pib_real_crecimiento, inflacion, "
+                "inflacion_fin_periodo, desempleo, deuda_gobierno_pct_pib, "
+                "balance_fiscal_pct_pib, cuenta_corriente_pct_pib, pib, "
+                "pib_per_capita, pib_per_capita_ppa, poblacion."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "pais": {
+                        "type": "string",
+                        "description": "Codigo ISO3 del pais, por ejemplo GTM"
+                    },
+                    "indicador": {
+                        "type": "string",
+                        "description": "Uno de los indicadores listados en la descripcion"
+                    },
+                    "anios_historia": {
+                        "type": "integer",
+                        "description": "Años observados a incluir antes de la proyeccion. Por defecto 3"
+                    },
+                    "anios_proyeccion": {
+                        "type": "integer",
+                        "description": "Años proyectados a incluir. Por defecto 5"
+                    }
+                },
+                "required": ["pais", "indicador"]
+            }
+        }
     }
 ]
 
@@ -335,6 +380,13 @@ def process_response(client, memory_messages, user_text):
                 result = tools.mapa_indicador(
                     paises=args["paises"],
                     indicador=args["indicador"]
+                )
+            elif name == "proyecciones_fmi":
+                result = tools.proyecciones_fmi(
+                    pais=args["pais"],
+                    indicador=args["indicador"],
+                    anios_historia=args.get("anios_historia", 3),
+                    anios_proyeccion=args.get("anios_proyeccion", 5)
                 )
             else:
                 result = {"error": f"Herramienta desconocida: {name}"}

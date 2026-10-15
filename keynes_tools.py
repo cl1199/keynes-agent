@@ -523,6 +523,129 @@ class KeynesTools:
             "fallidos": fallidos,
             "fuente": "Banco Mundial",
         }
+### Herramienta 9: Proyecciones del FMI (World Economic Outlook)
+
+    # clave -> (codigo en DataMapper, nombre para mostrar)
+    INDICADORES_FMI = {
+        "pib_real_crecimiento": ("NGDP_RPCH", "Crecimiento del PIB real (%)"),
+        "inflacion": ("PCPIPCH", "Inflación promedio anual (%)"),
+        "inflacion_fin_periodo": ("PCPIEPCH", "Inflación a fin de año (%)"),
+        "desempleo": ("LUR", "Desempleo (% de la fuerza laboral)"),
+        "deuda_gobierno_pct_pib": ("GGXWDG_NGDP", "Deuda bruta del gobierno (% del PIB)"),
+        "balance_fiscal_pct_pib": ("GGXCNL_NGDP", "Balance fiscal del gobierno (% del PIB)"),
+        "cuenta_corriente_pct_pib": ("BCA_NGDPD", "Cuenta corriente (% del PIB)"),
+        "pib": ("NGDPD", "PIB (miles de millones de US$)"),
+        "pib_per_capita": ("NGDPDPC", "PIB per cápita (US$)"),
+        "pib_per_capita_ppa": ("PPPPC", "PIB per cápita PPA (dólares internacionales)"),
+        "poblacion": ("LP", "Población (millones)"),
+    }
+    URL_FMI = "https://www.imf.org/external/datamapper/api/v1"
+
+    def _consultar_fmi(self, ruta: str):
+        """
+        GET a la API DataMapper del FMI, cacheado en memoria.
+        No se guarda en Supabase: el FMI publica una edicion nueva del WEO
+        cada abril y octubre, y una proyeccion vieja seria incorrecta.
+        """
+        llave = f"FMI:{ruta}"
+        if llave in self._cache:
+            return self._cache[llave]
+        r = requests.get(f"{self.URL_FMI}/{ruta}", timeout=self.TIMEOUT)
+        r.raise_for_status()
+        data = r.json()
+        self._cache[llave] = data
+        return data
+
+    def proyecciones_fmi(self, pais: str, indicador: str,
+                         anios_historia: int = 3, anios_proyeccion: int = 5) -> dict:
+        """
+        Historia reciente y proyecciones de un indicador segun el World
+        Economic Outlook del FMI. Los años desde el actual en adelante se
+        marcan como proyeccion.
+        """
+        pais = (pais or "").strip().upper()
+        clave = (indicador or "").strip().lower()
+
+        if len(pais) != 3:
+            return {"error": "El país debe indicarse con código ISO3, por ejemplo GTM."}
+        if clave not in self.INDICADORES_FMI:
+            return {"error": f"Indicador '{indicador}' no disponible en el FMI.",
+                    "indicadores_validos": list(self.INDICADORES_FMI.keys())}
+        try:
+            anios_historia = max(0, int(anios_historia))
+            anios_proyeccion = max(1, int(anios_proyeccion))
+        except (TypeError, ValueError):
+            return {"error": "Los años de historia y proyección deben ser enteros."}
+
+        codigo, nombre = self.INDICADORES_FMI[clave]
+        try:
+            valores = self._consultar_fmi(codigo)["values"][codigo]
+        except requests.Timeout:
+            return {"error": "El servidor del FMI esta tardando mas de lo normal. "
+                             "Intenta de nuevo en unos segundos."}
+        except Exception as e:
+            return {"error": f"No se pudo consultar el FMI: {e}"}
+
+        datos_pais = valores.get(pais)
+        if not datos_pais:
+            return {"error": f"El FMI no publica {clave} para {pais}."}
+
+        # La edicion y el nombre del pais son adorno: si fallan, no se aborta
+        try:
+            meta = self._consultar_fmi("indicators")["indicators"][codigo]
+            edicion = meta.get("source") or "World Economic Outlook"
+        except Exception:
+            edicion = "World Economic Outlook"
+        try:
+            nombre_pais = self._consultar_fmi("countries")["countries"][pais]["label"]
+        except Exception:
+            nombre_pais = pais
+
+        anio_actual = datetime.now(ZoneInfo(self.ZONA)).year
+        observados = sorted((int(a), v) for a, v in datos_pais.items()
+                            if v is not None and int(a) < anio_actual)
+        proyectados = sorted((int(a), v) for a, v in datos_pais.items()
+                             if v is not None and int(a) >= anio_actual)
+
+        if not proyectados:
+            return {"error": f"El FMI no tiene proyecciones de {clave} para {pais}."}
+
+        observados = observados[-anios_historia:] if anios_historia else []
+        proyectados = proyectados[:anios_proyeccion]
+
+        serie = ([{"anio": a, "valor": v, "proyeccion": False} for a, v in observados]
+                 + [{"anio": a, "valor": v, "proyeccion": True} for a, v in proyectados])
+
+        valores_proy = [v for _, v in proyectados]
+        analisis = {
+            "promedio_proyectado": round(sum(valores_proy) / len(valores_proy), 2),
+            "maximo_proyectado": {"anio": max(proyectados, key=lambda x: x[1])[0],
+                                  "valor": max(valores_proy)},
+            "minimo_proyectado": {"anio": min(proyectados, key=lambda x: x[1])[0],
+                                  "valor": min(valores_proy)},
+        }
+        if observados:
+            ultimo_anio, ultimo_valor = observados[-1]
+            analisis["ultimo_observado"] = {"anio": ultimo_anio, "valor": ultimo_valor}
+            analisis["ultimo_proyectado"] = {"anio": proyectados[-1][0],
+                                             "valor": valores_proy[-1]}
+            analisis["cambio_ultimo_proyectado_vs_ultimo_observado"] = round(
+                valores_proy[-1] - ultimo_valor, 2)
+
+        return {
+            "tipo": "proyeccion",
+            "pais": nombre_pais,
+            "codigo": pais,
+            "indicador": clave,
+            "indicador_nombre": nombre,
+            "serie": serie,
+            "periodo": f"{serie[0]['anio']}-{serie[-1]['anio']}",
+            "primer_anio_proyectado": proyectados[0][0],
+            "analisis": analisis,
+            "nota": ("Los años desde el primer_anio_proyectado son proyecciones "
+                     "del FMI; los anteriores pueden ser estimaciones preliminares."),
+            "fuente": f"FMI · {edicion}",
+        }
     # Prueba rapida de las herramientas sin pasar por el agente
 if __name__ == "__main__":
     t = KeynesTools()

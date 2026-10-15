@@ -179,6 +179,66 @@ def formatear(valor: float, indicador: str) -> str:
     if abs(valor) >= 1000:
         return f"{valor:,.0f}"
     return f"{valor:,.2f}"
+def dibujar_proyeccion(datos: dict) -> None:
+    """Renderiza un resultado de proyecciones_fmi: observado solido, proyectado punteado."""
+    df = pd.DataFrame(datos["serie"])
+    df["Tramo"] = df["proyeccion"].map({False: "Observado", True: "Proyección FMI"})
+    df = df.rename(columns={"anio": "Año", "valor": "Valor"})
+
+    # El ultimo año observado se repite en el tramo proyectado para que
+    # las dos lineas queden unidas.
+    observados = df[~df["proyeccion"]]
+    if not observados.empty:
+        puente = observados.iloc[[-1]].assign(Tramo="Proyección FMI")
+        df_lineas = pd.concat([df, puente]).sort_values("Año")
+    else:
+        df_lineas = df
+
+    with st.container(border=True):
+        st.markdown(f"**{datos['indicador_nombre']}**")
+        st.html(
+            f'<span style="font-family:\'JetBrains Mono\',monospace;font-size:10.5px;'
+            f'color:#9ca3af">{datos["pais"]} · {datos["periodo"]} · '
+            f'proyección desde {datos["primer_anio_proyectado"]}</span>'
+        )
+
+        x = alt.X("Año:O", axis=alt.Axis(title=None, labelAngle=0,
+                                         domainColor="#e6e6e2", ticks=False))
+        y = alt.Y("Valor:Q", axis=alt.Axis(title=None, grid=True,
+                                           gridColor="#f0f0ec", domain=False))
+        lineas = (
+            alt.Chart(df_lineas)
+            .mark_line(strokeWidth=2, color="#111827")
+            .encode(
+                x=x, y=y,
+                detail="Tramo:N",
+                strokeDash=alt.StrokeDash(
+                    "Tramo:N",
+                    scale=alt.Scale(domain=["Observado", "Proyección FMI"],
+                                    range=[[1, 0], [5, 4]]),
+                    legend=alt.Legend(title=None, orient="top"),
+                ),
+            )
+        )
+        puntos = (
+            alt.Chart(df)
+            .mark_point(filled=True, size=40, color="#111827")
+            .encode(
+                x=x, y=y,
+                tooltip=["Año", "Tramo", alt.Tooltip("Valor:Q", format=",.2f")],
+            )
+        )
+        chart = (
+            (lineas + puntos)
+            .properties(height=260)
+            .configure_view(stroke=None)
+            .configure_axis(labelFont="Archivo", labelColor="#9ca3af", labelFontSize=11)
+        )
+        st.altair_chart(chart, use_container_width=True)
+
+        st.html(f'<div class="k-source">Fuente: {datos["fuente"]}</div>')
+
+
 def dibujar_visual(v: dict) -> None:
     """Despacha al render correcto segun el tipo de resultado."""
     tipo = v.get("tipo")
@@ -190,6 +250,8 @@ def dibujar_visual(v: dict) -> None:
         dibujar_sectores(v)
     elif tipo == "mapa":
         dibujar_mapa(v)
+    elif tipo == "proyeccion":
+        dibujar_proyeccion(v)
     else:
         dibujar_grafico(v)
 
@@ -282,6 +344,7 @@ with st.sidebar:
 
     st.markdown(
         "Banco Mundial · WDI  \n"
+        "FMI · World Economic Outlook  \n"
         "exchangerate-api.com \n"
     )
 
@@ -295,6 +358,7 @@ with st.sidebar:
         "Compara la inflación de Guatemala, México y Costa Rica",
         "Muéstrame el PIB per cápita de Centroamérica en un mapa",
         "¿De qué vive la economía de Guatemala?",
+        "¿Cuánto crecerá Guatemala según el FMI?",
     ]
 
     with st.container(key="chips"):
@@ -394,7 +458,8 @@ if pregunta:
         st.markdown(respuesta)
 
         visuales = [r["resultado"] for r in resultados
-                    if r["resultado"].get("tipo") in ("grafico", "comparacion", "ficha", "sectores", "mapa")]
+                    if r["resultado"].get("tipo") in ("grafico", "comparacion", "ficha", "sectores", "mapa",
+                                                         "proyeccion")]
         for v in visuales:
             dibujar_visual(v)
 
